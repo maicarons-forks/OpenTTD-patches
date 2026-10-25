@@ -1,0 +1,22 @@
+/* 文档配图：居中 + 圆角 + 阴影，宽度由正文内联 style 控制（沿用原 Typst 百分比），
+   全局封顶避免超宽大图撑破版面。 */
+.doc-figure {
+  text-align: center;
+  margin: 1.5rem 0;
+}
+
+.doc-figure img {
+  max-width: min(100%, 860px);
+  height: auto;
+  border-radius: 8px;
+  border: 1px solid var(--vp-c-divider);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  background: var(--vp-c-bg-soft);
+}
+
+/* 长表格在窄屏下允许横向滚动，避免挤压换行难读 */
+.vp-doc table {
+  display: block;
+  overflow-x: auto;
+  max-width: 100%;
+}

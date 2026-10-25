@@ -1,6 +1,11 @@
 name: Build Docs
 
 on:
+  push:
+    branches: [px-patch]
+    paths:
+      - "pxp-docs/**"
+      - ".github/workflows/deploy-docs.yml"
   workflow_dispatch:
 
 defaults:
@@ -12,29 +17,44 @@ permissions:
   pages: write
   id-token: write
 
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
 jobs:
   build-docs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
 
-      - name: Install Typst
-        uses: typst-community/setup-typst@v3
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          typst-version: "0.15.1"
+          node-version: 20
+          cache: npm
+          cache-dependency-path: pxp-docs/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Convert Typst sources to Markdown
+        run: python3 ../tools/convert_typst_to_md.py
 
       - name: Build docs
-        run: typst compile --features bundle,html --format bundle main.typ dist
+        run: npm run docs:build
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ${{ github.workspace }}/pxp-docs/dist
+          path: ${{ github.workspace }}/pxp-docs/.vitepress/dist
 
   deploy:
     needs: build-docs
     runs-on: ubuntu-latest
     environment:
       name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/deploy-pages@v5
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
